@@ -20,6 +20,12 @@ public class UploadExecutor extends TusExecutor {
     protected TusUpload upload;
     protected TusUploader uploader;
 
+    protected double progress;
+
+    public double getProgress() {
+        return progress;
+    }
+
     public TusUploader getUploader() {
         return uploader;
     }
@@ -43,7 +49,12 @@ public class UploadExecutor extends TusExecutor {
 
         uploader.finish();
 
-        LOGGER.info("Upload finished.");
+        if (progress >= 100) {
+            LOGGER.info("Upload finished.");
+        } else {
+            LOGGER.info(String.format("Upload terminated at %s percentage.", progress));
+        }
+
         LOGGER.info(String.format("Upload available at: %s", uploader.getUploadURL().toString()));
     }
 
@@ -53,7 +64,7 @@ public class UploadExecutor extends TusExecutor {
             // the current offsetValue.
             long totalBytes = upload.getSize();
             long bytesUploaded = uploader.getOffset();
-            double progress = (double) bytesUploaded / totalBytes * 100;
+            progress = (double) bytesUploaded / totalBytes * 100;
 
             LOGGER.info(String.format("Upload at %06.2f%%.\n", progress));
         } while(uploader.uploadChunk() > -1);

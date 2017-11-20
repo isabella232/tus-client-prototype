@@ -1,5 +1,6 @@
 package uk.ac.ebi.subs.fileupload.controller;
 
+import io.tus.java.client.TusUpload;
 import io.tus.java.client.TusUploader;
 import org.junit.Before;
 import org.junit.Test;
@@ -15,12 +16,15 @@ import org.springframework.web.client.RestTemplate;
 import uk.ac.ebi.subs.fileupload.PostFileDelete;
 import uk.ac.ebi.subs.fileupload.TerminatedUploadExecutor;
 import uk.ac.ebi.subs.fileupload.UploadClient;
+import uk.ac.ebi.subs.fileupload.UploadExecutor;
 
 import java.io.File;
 import java.net.URI;
 import java.util.logging.Logger;
 
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.Matchers.greaterThanOrEqualTo;
+import static org.hamcrest.Matchers.lessThanOrEqualTo;
 import static org.hamcrest.core.IsEqual.equalTo;
 import static org.junit.Assert.assertThat;
 
@@ -31,8 +35,6 @@ import static org.junit.Assert.assertThat;
 public class TusTerminateControllerHookTest {
 
     private static final Logger LOGGER = Logger.getLogger( TusTerminateControllerHookTest.class.getName() );
-
-    private TerminatedUploadExecutor terminatedUploadExecutor;
 
     private RestTemplate restTemplate;
 
@@ -45,10 +47,10 @@ public class TusTerminateControllerHookTest {
     public void postTerminateEventDispatchedWhenFileUploadTerminated() throws Exception {
         UploadClient uploadClient = new UploadClient();
 
-        File file = new File("src/test/resources/ReactiveKafka.mp4");
+        File file = new File("src/test/resources/guggenheim_museum.jpg");
         uploadClient.setFile(file);
 
-        terminatedUploadExecutor = new TerminatedUploadExecutor(uploadClient.getTusClient(), uploadClient.getUpload());
+        TerminatedUploadExecutor terminatedUploadExecutor = new TerminatedUploadExecutor(uploadClient.getTusClient(), uploadClient.getUpload());
 
         uploadClient.setExecutor(terminatedUploadExecutor);
 
@@ -62,6 +64,57 @@ public class TusTerminateControllerHookTest {
         sendDeleteFileRequest(uploadURI);
 
         assertThat(checkFileExsistence(uploadURI), is(equalTo(HttpStatus.NOT_FOUND)));
+    }
+
+    @Test
+    public void canDeleteAFileAfterUploadedFully() throws Exception {
+        UploadClient uploadClient = new UploadClient();
+
+        File file = new File("src/test/resources/guggenheim_museum.jpg");
+
+        uploadClient.setFile(file);
+        uploadClient.attemptUpload();
+
+        final UploadExecutor executor = uploadClient.getExecutor();
+        TusUploader uploader = executor.getUploader();
+        URI uploadURI = uploader.getUploadURL().toURI();
+
+        assertThat(checkFileExsistence(uploadURI), is(equalTo(HttpStatus.OK)));
+        assertThat(executor.getProgress(), is(greaterThanOrEqualTo(100d)));
+
+        sendDeleteFileRequest(uploadURI);
+
+        assertThat(checkFileExsistence(uploadURI), is(equalTo(HttpStatus.NOT_FOUND)));
+    }
+
+    @Test
+    public void pausedFileUploadShouldBeResumable() throws Exception {
+        UploadClient uploadClient = new UploadClient();
+
+        File file = new File("src/test/resources/guggenheim_museum.jpg");
+        uploadClient.setFile(file);
+
+        TerminatedUploadExecutor terminatedUploadExecutor = new TerminatedUploadExecutor(uploadClient.getTusClient(), uploadClient.getUpload());
+
+        uploadClient.setExecutor(terminatedUploadExecutor);
+
+        uploadClient.attemptUpload();
+
+        TusUploader uploader = terminatedUploadExecutor.getUploader();
+        URI uploadURI = uploader.getUploadURL().toURI();
+
+        assertThat(checkFileExsistence(uploadURI), is(equalTo(HttpStatus.OK)));
+        assertThat(terminatedUploadExecutor.getProgress(), is(lessThanOrEqualTo(100d)));
+
+        uploadClient.setExecutor(new UploadExecutor(uploadClient.getTusClient(), new TusUpload(file)));
+        uploadClient.attemptUpload();
+
+        final UploadExecutor executor = uploadClient.getExecutor();
+        uploader = executor.getUploader();
+        uploadURI = uploader.getUploadURL().toURI();
+
+        assertThat(checkFileExsistence(uploadURI), is(equalTo(HttpStatus.OK)));
+        assertThat(executor.getProgress(), is(greaterThanOrEqualTo(100d)));
     }
 
     private void sendDeleteFileRequest(URI uploadURI) {

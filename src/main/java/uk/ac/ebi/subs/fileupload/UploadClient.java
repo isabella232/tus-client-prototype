@@ -21,10 +21,14 @@ public class UploadClient {
     private File file;
     private TusUpload upload;
 
-    private TusExecutor executor;
+    private UploadExecutor executor;
 
-    public void setExecutor(TusExecutor executor) {
+    public void setExecutor(UploadExecutor executor) {
         this.executor = executor;
+    }
+
+    public UploadExecutor getExecutor() {
+        return executor;
     }
 
     public TusClient getTusClient() {

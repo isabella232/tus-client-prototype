@@ -29,7 +29,7 @@ public class TerminatedUploadExecutor extends UploadExecutor {
             // the current offsetValue.
             long totalBytes = upload.getSize();
             long bytesUploaded = uploader.getOffset();
-            double progress = (double) bytesUploaded / totalBytes * 100;
+            progress = (double) bytesUploaded / totalBytes * 100;
 
             if (progress > TERMINATION_UPLOAD_PERCENT) {
                 uploadPaused = true;
@@ -37,7 +37,5 @@ public class TerminatedUploadExecutor extends UploadExecutor {
 
             LOGGER.info(String.format("Upload at %06.2f%%.\n", progress));
         } while(uploader.uploadChunk() > -1 && !uploadPaused);
-
-        uploader.finish();
     }
 }
