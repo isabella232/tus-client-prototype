@@ -20,6 +20,9 @@ import uk.ac.ebi.subs.fileupload.UploadExecutor;
 
 import java.io.File;
 import java.net.URI;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
 import java.util.logging.Logger;
 
 import static org.hamcrest.CoreMatchers.is;
@@ -38,22 +41,30 @@ public class TusTerminateControllerHookTest {
 
     private RestTemplate restTemplate;
 
+    Map<String, String> headers;
+    File file;
+    String submissionId = "12345-67890";
+
     @Before
     public void setup() {
         this.restTemplate = new RestTemplate();
+
+        file = new File("src/test/resources/guggenheim_museum.jpg");
+
+        headers = new HashMap<>();
+        headers.put("submissionID", submissionId);
+        headers.put("filename", file.getName());
     }
 
     @Test
     public void postTerminateEventDispatchedWhenFileUploadTerminated() throws Exception {
         UploadClient uploadClient = new UploadClient();
 
-        File file = new File("src/test/resources/guggenheim_museum.jpg");
-        uploadClient.setFile(file);
+        uploadClient.setFile(file, headers);
 
         TerminatedUploadExecutor terminatedUploadExecutor = new TerminatedUploadExecutor(uploadClient.getTusClient(), uploadClient.getUpload());
 
         uploadClient.setExecutor(terminatedUploadExecutor);
-
         uploadClient.attemptUpload();
 
         TusUploader uploader = terminatedUploadExecutor.getUploader();
@@ -70,9 +81,7 @@ public class TusTerminateControllerHookTest {
     public void canDeleteAFileAfterUploadedFully() throws Exception {
         UploadClient uploadClient = new UploadClient();
 
-        File file = new File("src/test/resources/guggenheim_museum.jpg");
-
-        uploadClient.setFile(file);
+        uploadClient.setFile(file, headers);
         uploadClient.attemptUpload();
 
         final UploadExecutor executor = uploadClient.getExecutor();
@@ -91,8 +100,7 @@ public class TusTerminateControllerHookTest {
     public void pausedFileUploadShouldBeResumable() throws Exception {
         UploadClient uploadClient = new UploadClient();
 
-        File file = new File("src/test/resources/guggenheim_museum.jpg");
-        uploadClient.setFile(file);
+        uploadClient.setFile(file, headers);
 
         TerminatedUploadExecutor terminatedUploadExecutor = new TerminatedUploadExecutor(uploadClient.getTusClient(), uploadClient.getUpload());
 

@@ -11,6 +11,8 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * This class is a wrapper around {@link TusClient} class.
@@ -51,9 +53,10 @@ public class UploadClient {
      * @param file the {@link File} to upload
      * @throws FileNotFoundException if the file to be uploaded can not be found
      */
-    public void setFile(File file) throws FileNotFoundException {
+    public void setFile(File file, Map<String, String> metadata) throws FileNotFoundException {
         this.file = file;
         this.upload = new TusUpload(file);
+        this.upload.setMetadata(metadata);
         this.executor = new UploadExecutor(tusClient, upload);
     }
 
