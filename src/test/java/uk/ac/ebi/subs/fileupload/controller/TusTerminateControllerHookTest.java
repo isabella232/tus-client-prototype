@@ -22,7 +22,6 @@ import java.io.File;
 import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.UUID;
 import java.util.logging.Logger;
 
 import static org.hamcrest.CoreMatchers.is;
