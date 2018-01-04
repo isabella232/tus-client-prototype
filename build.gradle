@@ -38,3 +38,7 @@ springBoot {
     executable = true
 }
 mainClassName = "uk.ac.ebi.subs.fileupload.TusHttpHookApplication"
+
+test {
+    testLogging.showStandardStreams = true
+}
