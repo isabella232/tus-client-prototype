@@ -1,5 +1,6 @@
 package uk.ac.ebi.subs.fileupload.controller;
 
+import io.tus.java.client.TusUploader;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -12,6 +13,7 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 import uk.ac.ebi.subs.fileupload.UploadClient;
+import uk.ac.ebi.subs.fileupload.UploadExecutor;
 
 import java.io.File;
 import java.net.URI;
@@ -21,6 +23,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
+
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.assertThat;
 
 @RunWith(value = SpringRunner.class)
 @SpringBootTest
@@ -51,9 +57,10 @@ public class UploadTest {
     }
 
     @Test
-    public void canUploadAFile() throws Exception {
+    public void canUpload10File_AndLogAverageUploadTime() throws Exception {
+        UploadClient uploadClient = new UploadClient();
         for (int i = 0; i < 10; i++) {
-            UploadClient uploadClient = new UploadClient();
+            uploadClient = new UploadClient();
             uploadClient.setFile(file, headers);
 
             long startTime = Instant.now().toEpochMilli();
@@ -64,17 +71,18 @@ public class UploadTest {
             measuredTimes.add(endTime - startTime);
         }
 
-//        final UploadExecutor executor = uploadClient.getExecutor();
-//        TusUploader uploader = executor.getUploader();
-//        URI uploadURI = uploader.getUploadURL().toURI();
+        final UploadExecutor executor = uploadClient.getExecutor();
+        TusUploader uploader = executor.getUploader();
+        URI uploadURI = uploader.getUploadURL().toURI();
 
-//        assertThat(checkFileExsistence(uploadURI), is(equalTo(HttpStatus.OK)));
+        assertThat(checkFileExistence(uploadURI), is(equalTo(HttpStatus.OK)));
 
+        LOGGER.info(String.format("Elapsed times: %s", measuredTimes.toString()));
         LOGGER.info("Average elapsed time in milliseconds: "
                 + measuredTimes.stream().mapToLong(time -> time).average().getAsDouble());
     }
 
-    private HttpStatus checkFileExsistence(URI uploadURI) {
+    private HttpStatus checkFileExistence(URI uploadURI) {
         try {
             ResponseEntity<String> response = restTemplate.getForEntity(uploadURI, String.class);
             return response.getStatusCode();
