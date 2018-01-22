@@ -43,7 +43,7 @@ public class UploadExecutor extends TusExecutor {
         LOGGER.info("Starting upload...");
 
         uploader = uploadClient.resumeOrCreateUpload(upload);
-        uploader.setChunkSize(1024);
+        uploader.setChunkSize(8192);
 
         calculateProgress();
 
