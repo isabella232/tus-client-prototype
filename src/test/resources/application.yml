@@ -1,0 +1,4 @@
+aap:
+  URL: https://explore.api.aai.ebi.ac.uk/auth/
+  username: username
+  password: pass

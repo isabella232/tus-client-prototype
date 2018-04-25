@@ -2,7 +2,6 @@ package uk.ac.ebi.subs.fileupload;
 
 import io.tus.java.client.ProtocolException;
 import io.tus.java.client.TusClient;
-import io.tus.java.client.TusExecutor;
 import io.tus.java.client.TusURLMemoryStore;
 import io.tus.java.client.TusUpload;
 
@@ -11,13 +10,18 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.HashMap;
 import java.util.Map;
 
 /**
  * This class is a wrapper around {@link TusClient} class.
  */
 public class UploadClient {
+
+    private final String INTERNAL_DEV_SERVER_URL = "http://wp-np2-58:1080/files/";
+    private final String INTERNAL_TEST_SERVER_1_URL = "http://wp-p1m-58.ebi.ac.uk:1080/files/";
+    private final String LOCAL_TEST_SERVER_URL = "http://localhost:1080/files/";
+    private final String EXTERNAL_DEV_SERVER_URL = "https://submission-dev.ebi.ac.uk/files/";
+    private final String EXTERNAL_TEST_SERVER_URL = "https://submission-test.ebi.ac.uk/files/";
 
     private TusClient tusClient;
     private File file;
@@ -43,7 +47,7 @@ public class UploadClient {
 
     public UploadClient() throws MalformedURLException {
         this.tusClient = new TusClient();
-        tusClient.setUploadCreationURL(new URL("http://localhost:1080/files/"));
+        tusClient.setUploadCreationURL(new URL(INTERNAL_DEV_SERVER_URL));
         tusClient.enableResuming(new TusURLMemoryStore());
     }
 
